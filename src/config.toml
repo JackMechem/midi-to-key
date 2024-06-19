@@ -1,0 +1,20 @@
+[config]
+inputPort = 2
+
+[[mapping]]
+name = "Bottom Left"
+byte0 = 144
+byte1 = 37
+key = "kitty"
+
+[[mapping]]
+name = "Bottom Middle"
+byte0 = 144
+byte1 = 38
+key = "firefox"
+
+[[mapping]]
+name = "Bottom Right"
+byte0 = 144
+byte1 = 39
+key = "thunar"

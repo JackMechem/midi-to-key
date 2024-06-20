@@ -1,20 +1,23 @@
 [config]
-inputPort = 2
+inputPort = 2 # The input port of the midi device
 
 [[mapping]]
-name = "Bottom Left"
-byte0 = 144
-byte1 = 37
-key = "kitty"
+name = "Bottom Left" # Does not affect anything
+byte0 = 144 # Button up or down
+byte1 = 37 # The key value
+type = "command" # Either "command" or "key"
+key = "kitty" # The event. Either a command to launch a program or a key value
 
 [[mapping]]
 name = "Bottom Middle"
 byte0 = 144
 byte1 = 38
+type = "command"
 key = "firefox"
 
 [[mapping]]
 name = "Bottom Right"
 byte0 = 144
 byte1 = 39
+type = "command"
 key = "thunar"

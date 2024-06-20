@@ -1,3 +1,6 @@
+#include <linux/input-event-codes.h>
+#define APP_VERSION "1.0.0"
+
 #include "RtMidi.h"
 #include <chrono>
 #include <cstdlib>
@@ -16,10 +19,38 @@
 #include <unistd.h>
 #include <vector>
 
-#define APP_VERSION "1.0.0"
+#ifdef __unix__
+
+#include <fcntl.h>
+#include <linux/input.h>
+#include <linux/uinput.h>
+#include <sys/stat.h>
+
+#endif
 
 bool done;
 static void finish(int ignore) { done = true; }
+
+std::string GetEnv(const std::string &var) {
+	const char *val = std::getenv(var.c_str());
+	if (val == nullptr) {
+		return "";
+	} else {
+		return val;
+	}
+}
+
+void emit(int fd, int type, int code, int val) {
+	struct input_event ie;
+
+	ie.type = type;
+	ie.code = code;
+	ie.value = val;
+	ie.time.tv_sec = 0;
+	ie.time.tv_usec = 0;
+
+	write(fd, &ie, sizeof(ie));
+}
 
 int listMidiIO() {
 
@@ -148,12 +179,55 @@ void helpMessage() {
 		   "Default config is $HOME/.config/midi-to-key/config.toml\n";
 }
 
-int listenAndMap(std::string configLocation) {
+int keyPress(int fd, std::vector<int> keyCodes) {
+
+	for (int i = 0; i < keyCodes.size(); i++) {
+		emit(fd, EV_KEY, keyCodes[i], 1);
+		emit(fd, EV_SYN, SYN_REPORT, 0);
+	}
+
+	for (int i = 0; i < keyCodes.size(); i++) {
+		emit(fd, EV_KEY, keyCodes[i], 0);
+		emit(fd, EV_SYN, SYN_REPORT, 0);
+	}
+
+	return 0;
+}
+
+int listenAndMap(std::string configLocation, std::string sessionType) {
 
 	RtMidiIn *midiin = new RtMidiIn();
 	std::vector<unsigned char> message;
 	int nBytes, i;
 	double stamp;
+	int fd;
+
+	if (sessionType == "wayland") {
+
+		fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
+		struct uinput_setup usetup;
+
+		ioctl(fd, UI_SET_EVBIT, EV_KEY);
+		ioctl(fd, UI_SET_KEYBIT, 10);
+		for (ssize_t i = 1; i < KEY_MAX; i++)
+			ioctl(fd, UI_SET_KEYBIT, i);
+
+		memset(&usetup, 0, sizeof(usetup));
+		usetup.id.bustype = BUS_USB;
+		usetup.id.vendor = 0x1234;
+		usetup.id.product = 0x5678;
+		strcpy(usetup.name, "Midi to Key");
+
+		ioctl(fd, UI_DEV_SETUP, &usetup);
+		ioctl(fd, UI_DEV_CREATE);
+
+		sleep(1);
+	} else {
+		std::cout << "\n|**| Keypress events only work on wayland!\n"
+					 "|**| I will add support for X11 as soon as possible!\n"
+					 "|**| Command events work; see more info on the "
+					 "help page: midi-to-key {-h|--help}\n\n";
+	}
 
 	struct conf_config {
 		std::optional<int> inputPort;
@@ -163,7 +237,9 @@ int listenAndMap(std::string configLocation) {
 		std::string name;
 		int byte0;
 		int byte1;
-		std::string key;
+		std::string type;
+		std::string command;
+		std::vector<int> key;
 	};
 	try {
 		toml::table parsedToml = toml::parse_file(configLocation);
@@ -194,7 +270,18 @@ int listenAndMap(std::string configLocation) {
 			parsedMapping.name = mappingData["name"].value_or("NAN");
 			parsedMapping.byte0 = mappingData["byte0"].value_or(128);
 			parsedMapping.byte1 = mappingData["byte1"].value_or(0);
-			parsedMapping.key = mappingData["key"].value_or("f");
+			parsedMapping.type = mappingData["type"].value_or("command");
+			if (parsedMapping.type == "command") {
+				parsedMapping.command = mappingData["command"].value_or("0");
+			} else if (parsedMapping.type == "key") {
+				std::vector<int> parsedKeys;
+				auto keyArray = mappingData["key"];
+				toml::array keyData = *keyArray.as_array();
+				for (const toml::node &keyValue : keyData) {
+					parsedKeys.push_back(keyValue.value_or(0));
+				}
+				parsedMapping.key = parsedKeys;
+			}
 
 			parsedMappingData.push_back(parsedMapping);
 		}
@@ -238,7 +325,17 @@ int listenAndMap(std::string configLocation) {
 							<< "Triggering mapping named: " << newMapping.name
 							<< std::endl
 							<< std::endl;
-						system((newMapping.key + " &").c_str());
+						if (newMapping.type == "command") {
+							system((newMapping.command + " &").c_str());
+						}
+						if (newMapping.type == "key") {
+							if (sessionType == "wayland") {
+								keyPress(fd, newMapping.key);
+							} else {
+								std::cerr
+									<< "X11 Currently Not Supported!!\n\n";
+							}
+						}
 					}
 				}
 			}
@@ -257,6 +354,9 @@ int listenAndMap(std::string configLocation) {
 		return 1;
 	}
 
+	ioctl(fd, UI_DEV_DESTROY);
+	close(fd);
+
 	return 0;
 }
 
@@ -268,6 +368,10 @@ int main(int argc, char *argv[]) {
 	const std::string homedir = pw->pw_dir;
 
 	std::string config = homedir + "/.config/midi-to-key/config.toml";
+
+	std::string sessionType = GetEnv("XDG_SESSION_TYPE");
+
+	std::cout << "Detected Session Type: " << sessionType << "\n";
 
 	if (argc > 1) {
 		for (int i = 0; i <= argc - 1; i++) {
@@ -284,7 +388,7 @@ int main(int argc, char *argv[]) {
 						break;
 					}
 				}
-				listenAndMap(config);
+				listenAndMap(config, sessionType);
 			}
 
 			// Prints help message and exits program

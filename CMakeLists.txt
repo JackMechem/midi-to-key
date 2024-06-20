@@ -31,3 +31,9 @@ target_include_directories(midi-to-key PUBLIC src)
 
 target_link_libraries(midi-to-key tomlplusplus)
 target_link_libraries(midi-to-key rtmidi)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+  install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")

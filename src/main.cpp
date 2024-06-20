@@ -1,44 +1,22 @@
-#include <linux/input-event-codes.h>
 #define APP_VERSION "1.0.0"
 
 #include "RtMidi.h"
-#include <chrono>
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <optional>
 #include <pwd.h>
 #include <signal.h>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <sys/types.h>
 #include <thread>
-#include <toml++/impl/node.hpp>
 #include <toml++/toml.hpp>
-#include <unistd.h>
-#include <vector>
 
 #ifdef __unix__
 
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
-#include <sys/stat.h>
 
 #endif
 
 bool done;
 static void finish(int ignore) { done = true; }
-
-std::string GetEnv(const std::string &var) {
-	const char *val = std::getenv(var.c_str());
-	if (val == nullptr) {
-		return "";
-	} else {
-		return val;
-	}
-}
 
 void emit(int fd, int type, int code, int val) {
 	struct input_event ie;
@@ -50,6 +28,21 @@ void emit(int fd, int type, int code, int val) {
 	ie.time.tv_usec = 0;
 
 	write(fd, &ie, sizeof(ie));
+}
+
+int keyPress(int fd, std::vector<int> keyCodes) {
+
+	for (int i = 0; i < keyCodes.size(); i++) {
+		emit(fd, EV_KEY, keyCodes[i], 1);
+		emit(fd, EV_SYN, SYN_REPORT, 0);
+	}
+
+	for (int i = 0; i < keyCodes.size(); i++) {
+		emit(fd, EV_KEY, keyCodes[i], 0);
+		emit(fd, EV_SYN, SYN_REPORT, 0);
+	}
+
+	return 0;
 }
 
 int listMidiIO() {
@@ -152,56 +145,17 @@ cleanup:
 	return 0;
 }
 
-void helpMessage() {
-	std::cout << "Midi To Key - Version " << APP_VERSION << "\n";
-	std::cout << "Made by Jack Mechem -- Project Github: "
-				 "https://github.com/JackMechem/midi-to-key \n\n";
-	std::cout << "Usage:\n";
-	std::cout << "  Help and List:\n";
-	std::cout << "    midi-to-key {--help|-h} | Shows Help Page\n";
-	std::cout << "    midi-to-key {--list-io|-lio} | Lists midi inputs and "
-				 "outputs\n";
-	std::cout
-		<< "    midi-to-key {--input-port|ip} <Port-Number> {--listen|-ln} "
-		   "| Listens "
-		   "to specified input port and displays midi note registered - Note: "
-		   "The {--input-port|-ip} flag must "
-		   "be typed before the {--listen|-ln} flag\n\n";
-	std::cout << "    Examples:\n";
-	std::cout << "      midi-to-key -lio | Lists io\n";
-	std::cout << "      midi-to-key -h | Shows help page\n";
-	std::cout
-		<< "      midi-to-key -ip 2 -ln | Lists input from specified port #2\n";
-	std::cout << std::endl << std::endl;
-	std::cout << "  Running The Program:\n";
-	std::cout
-		<< "    midi-to-key run [{--config|-c} </path/to/config>] - Note: "
-		   "Default config is $HOME/.config/midi-to-key/config.toml\n";
-}
-
-int keyPress(int fd, std::vector<int> keyCodes) {
-
-	for (int i = 0; i < keyCodes.size(); i++) {
-		emit(fd, EV_KEY, keyCodes[i], 1);
-		emit(fd, EV_SYN, SYN_REPORT, 0);
-	}
-
-	for (int i = 0; i < keyCodes.size(); i++) {
-		emit(fd, EV_KEY, keyCodes[i], 0);
-		emit(fd, EV_SYN, SYN_REPORT, 0);
-	}
-
-	return 0;
-}
-
 int listenAndMap(std::string configLocation, std::string sessionType) {
 
+	// {{{ Create Variables For Reading Midi Input
 	RtMidiIn *midiin = new RtMidiIn();
 	std::vector<unsigned char> message;
 	int nBytes, i;
 	double stamp;
 	int fd;
+	// }}}
 
+	// {{{ Open uinput File If On Wayland
 	if (sessionType == "wayland") {
 
 		fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
@@ -229,6 +183,8 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 					 "help page: midi-to-key {-h|--help}\n\n";
 	}
 
+	// }}}
+
 	struct conf_config {
 		std::optional<int> inputPort;
 	};
@@ -241,7 +197,10 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 		std::string command;
 		std::vector<int> key;
 	};
+
 	try {
+
+		// {{{ File parsing
 		toml::table parsedToml = toml::parse_file(configLocation);
 
 		// Config Section
@@ -285,6 +244,10 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 
 			parsedMappingData.push_back(parsedMapping);
 		}
+
+		// }}}
+
+		// {{{ Midi Device And Map Loop
 
 		// Check if there any ports just in case
 		unsigned int nPorts = midiin->getPortCount();
@@ -333,7 +296,8 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 								keyPress(fd, newMapping.key);
 							} else {
 								std::cerr
-									<< "X11 Currently Not Supported!!\n\n";
+									<< "Key simulations only work on "
+									   "wayland!!\nUse command instead!!\n";
 							}
 						}
 					}
@@ -342,9 +306,12 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
+		// }}}
 
 	cleanup:
 		delete midiin;
+		ioctl(fd, UI_DEV_DESTROY);
+		close(fd);
 
 		return 0;
 
@@ -360,19 +327,58 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 	return 0;
 }
 
+std::string GetEnv(const std::string &var) {
+	const char *val = std::getenv(var.c_str());
+	if (val == nullptr) {
+		return "";
+	} else {
+		return val;
+	}
+}
+
+void helpMessage() {
+	std::cout << "Midi To Key - Version " << APP_VERSION << "\n";
+	std::cout << "Made by Jack Mechem -- Project Github: "
+				 "https://github.com/JackMechem/midi-to-key \n\n";
+	std::cout << "Usage:\n";
+	std::cout << "  Help and List:\n";
+	std::cout << "    midi-to-key {--help|-h} | Shows Help Page\n";
+	std::cout << "    midi-to-key {--list-io|-lio} | Lists midi inputs and "
+				 "outputs\n";
+	std::cout
+		<< "    midi-to-key {--input-port|ip} <Port-Number> {--listen|-ln} "
+		   "| Listens "
+		   "to specified input port and displays midi note registered - Note: "
+		   "The {--input-port|-ip} flag must "
+		   "be typed before the {--listen|-ln} flag\n\n";
+	std::cout << "    Examples:\n";
+	std::cout << "      midi-to-key -lio | Lists io\n";
+	std::cout << "      midi-to-key -h | Shows help page\n";
+	std::cout
+		<< "      midi-to-key -ip 2 -ln | Lists input from specified port #2\n";
+	std::cout << std::endl << std::endl;
+	std::cout << "  Running The Program:\n";
+	std::cout
+		<< "    midi-to-key run [{--config|-c} </path/to/config>] - Note: "
+		   "Default config is $HOME/.config/midi-to-key/config.toml\n";
+}
+
 int main(int argc, char *argv[]) {
 
 	int inPort = 0;
+
+	// {{{ Get .config Directory
 	struct passwd *pw = getpwuid(getuid());
-
 	const std::string homedir = pw->pw_dir;
-
 	std::string config = homedir + "/.config/midi-to-key/config.toml";
+	// }}}
 
+	// {{{ Get Session Type From ENV Variable
 	std::string sessionType = GetEnv("XDG_SESSION_TYPE");
-
 	std::cout << "Detected Session Type: " << sessionType << "\n";
+	// }}}
 
+	// {{{ Loop Through Command Args
 	if (argc > 1) {
 		for (int i = 0; i <= argc - 1; i++) {
 			std::string arg = argv[i];
@@ -440,6 +446,7 @@ int main(int argc, char *argv[]) {
 	} else {
 		helpMessage();
 	}
+	// }}}
 
 	return 0;
 }

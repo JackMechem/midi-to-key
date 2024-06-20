@@ -1,6 +1,6 @@
 # Midi to Key
 
-> A small, simple, and minimal program for using any midi controller as a macropad on Linux (Wayland).
+> A small, simple, and minimal program for using any midi controller as a macro pad on Linux (Wayland).
 
 <details>
 
@@ -43,14 +43,14 @@
 ##### Linux <a name="support-linux"></a>
 
 - Full support for Wayland.
-- Limited support for X11 (can not simulate key presses) (I haven't actually tested it) - **support coming soon**
-- Windows and MacOS not tested and likely will not work.
+- Limited support for X11 (can not simulate key presses) - **support coming soon**
 
 ## Dependencies <a name="dependencies"></a>
 
 - [rtmidi](https://archlinux.org/packages/extra/x86_64/rtmidi/)
 - [toml++ (tomlplusplus)](https://archlinux.org/packages/extra/x86_64/tomlplusplus/)
 - [cmake](https://archlinux.org/packages/extra/x86_64/cmake/)
+- [gcc](https://archlinux.org/packages/core/x86_64/gcc/)
 
 ## Compiling and Installing <a name="comp-and-installing"></a>
 
@@ -59,8 +59,7 @@
 ##### 1.1 Arch Linux <a name="cai-1-1"></a>
 
 ```
-sudo pacman -S rtmidi
-sudo pacman -S tomlplusplus  # Not required
+sudo pacman -S rtmidi tomlplusplus gcc cmake
 ```
 
 ### 2. Clone the Project and Compile <a name="cai-2"></a>

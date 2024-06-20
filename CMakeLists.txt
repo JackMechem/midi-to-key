@@ -10,7 +10,7 @@ file(GLOB_RECURSE sources src/*.cpp src/*.h)
 # Example for adding compiler flags target_compile_options(midi-to-key PUBLIC
 # ...)
 
-# add_subdirectory(lib/rtmidi)
+add_subdirectory(lib/rtmidi)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -18,12 +18,6 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
   GIT_TAG v3.4.0)
 FetchContent_MakeAvailable(tomlplusplus)
-
-FetchContent_Declare(
-  rtmidi
-  GIT_REPOSITORY https://github.com/thestk/rtmidi
-  GIT_TAG 6.0.0)
-FetchContent_MakeAvailable(rtmidi)
 
 add_executable(midi-to-key ${sources})
 

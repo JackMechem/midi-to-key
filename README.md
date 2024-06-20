@@ -90,7 +90,7 @@ cmake --build .
 ##### 2.4 Install The Project <a name="cai-2-4"></a>
 
 ```
-cmake --install .
+sudo cmake --install .
 ```
 
 ##### See the [usage](#usage) and [configuration](#configuration) sections to configure.

@@ -9,6 +9,7 @@
 #### Table of Contents
 
 - [Support](#support)
+  - [Linux](#support-linux)
 - [Dependencies](#dependencies)
 - [Compiling and Installing](#comp-and-installing)
   - [Install Dependencies](#cai-1)
@@ -38,6 +39,8 @@
 </details>
 
 ## Support <a name="support"></a>
+
+##### Linux <a name="support-linux"></a>
 
 - Full support for Wayland.
 - Limited support for X11 (can not simulate key presses) (I haven't actually tested it) - **support coming soon**

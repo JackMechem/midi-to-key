@@ -42,8 +42,7 @@
 
 ##### Linux <a name="support-linux"></a>
 
-- Full support for Wayland.
-- Limited support for X11 (can not simulate key presses) - **support coming soon**
+- Full support for Wayland and X11
 
 ## Dependencies <a name="dependencies"></a>
 

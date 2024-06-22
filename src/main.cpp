@@ -155,33 +155,24 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 	int fd;
 	// }}}
 
-	// {{{ Open uinput File If On Wayland
-	if (sessionType == "wayland") {
+	fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
+	struct uinput_setup usetup;
 
-		fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-		struct uinput_setup usetup;
+	ioctl(fd, UI_SET_EVBIT, EV_KEY);
+	ioctl(fd, UI_SET_KEYBIT, 10);
+	for (ssize_t i = 1; i < KEY_MAX; i++)
+		ioctl(fd, UI_SET_KEYBIT, i);
 
-		ioctl(fd, UI_SET_EVBIT, EV_KEY);
-		ioctl(fd, UI_SET_KEYBIT, 10);
-		for (ssize_t i = 1; i < KEY_MAX; i++)
-			ioctl(fd, UI_SET_KEYBIT, i);
+	memset(&usetup, 0, sizeof(usetup));
+	usetup.id.bustype = BUS_USB;
+	usetup.id.vendor = 0x1234;
+	usetup.id.product = 0x5678;
+	strcpy(usetup.name, "Midi to Key");
 
-		memset(&usetup, 0, sizeof(usetup));
-		usetup.id.bustype = BUS_USB;
-		usetup.id.vendor = 0x1234;
-		usetup.id.product = 0x5678;
-		strcpy(usetup.name, "Midi to Key");
+	ioctl(fd, UI_DEV_SETUP, &usetup);
+	ioctl(fd, UI_DEV_CREATE);
 
-		ioctl(fd, UI_DEV_SETUP, &usetup);
-		ioctl(fd, UI_DEV_CREATE);
-
-		sleep(1);
-	} else {
-		std::cout << "\n|**| Keypress events only work on wayland!\n"
-					 "|**| I will add support for X11 as soon as possible!\n"
-					 "|**| Command events work; see more info on the "
-					 "help page: midi-to-key {-h|--help}\n\n";
-	}
+	sleep(1);
 
 	// }}}
 

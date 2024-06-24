@@ -1,6 +1,6 @@
 # Midi to Key
 
-> A small, simple, and minimal program for using any midi controller as a macro pad on Linux (Wayland).
+> A small, simple, and minimal program for using any midi controller as a macro pad on Linux.
 
 <details>
 

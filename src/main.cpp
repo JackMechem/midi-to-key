@@ -155,6 +155,8 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 	int fd;
 	// }}}
 
+	// {{{ Open Uinput File
+
 	fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 	struct uinput_setup usetup;
 
@@ -283,13 +285,7 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 							system((newMapping.command + " &").c_str());
 						}
 						if (newMapping.type == "key") {
-							if (sessionType == "wayland") {
-								keyPress(fd, newMapping.key);
-							} else {
-								std::cerr
-									<< "Key simulations only work on "
-									   "wayland!!\nUse command instead!!\n";
-							}
+							keyPress(fd, newMapping.key);
 						}
 					}
 				}

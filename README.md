@@ -50,6 +50,7 @@
 - [toml++ (tomlplusplus)](https://archlinux.org/packages/extra/x86_64/tomlplusplus/)
 - [cmake](https://archlinux.org/packages/extra/x86_64/cmake/)
 - [gcc](https://archlinux.org/packages/core/x86_64/gcc/)
+- uinput linux kernel module (for simulating key strokes)
 
 ## Compiling and Installing <a name="comp-and-installing"></a>
 
@@ -66,7 +67,7 @@ sudo pacman -S rtmidi tomlplusplus gcc cmake
 ##### 2.1 Clone the Project <a name="cai-2-1"></a>
 
 ```
-git clone https://github.com/JackMechem/midi-to-key.git
+git clone --recursive https://github.com/JackMechem/midi-to-key.git # --recursive downloads submodules
 
 cd midi-to-key
 ```
@@ -94,6 +95,8 @@ sudo cmake --install .
 ##### See the [usage](#usage) and [configuration](#configuration) sections to configure.
 
 ## Usage <a name="usage"></a>
+
+> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midi-to-key need access to the `/dev/uinput` file.
 
 ### Help Page <a name="help-page"></a>
 
@@ -156,6 +159,8 @@ midi-to-key --input-port 2 --listen # Replace the 2 with what ever port you are 
 
 ## Running the Program <a name="running"></a>
 
+> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midi-to-key accesses `/dev/uinput` directly.
+
 ### Running With The Default Configuration Path <a name="running-default"></a>
 
 The default configuration path is listed below.
@@ -169,7 +174,7 @@ See the [configuration](#configuration) section to create a configuration file**
 ##### The command below runs the program with the default configuration path
 
 ```
-midi-to-key run
+midi-to-key run # May need to be run with sudo!
 ```
 
 ### Running With a Custom Configuration Path <a name="running-custom"></a>

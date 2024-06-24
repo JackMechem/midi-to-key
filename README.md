@@ -96,7 +96,7 @@ sudo cmake --install .
 
 ## Usage <a name="usage"></a>
 
-> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midi-to-key need access to the `/dev/uinput` file.
+> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midi-to-key accesses `/dev/uinput` directly.
 
 ### Help Page <a name="help-page"></a>
 

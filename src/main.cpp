@@ -1,6 +1,6 @@
 #define APP_VERSION "1.0.0"
 
-#include "RtMidi.h"
+#include "rtmidi/RtMidi.h"
 #include <iostream>
 #include <pwd.h>
 #include <signal.h>

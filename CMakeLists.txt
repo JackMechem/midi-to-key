@@ -5,12 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
 
-file(GLOB_RECURSE sources src/*.cpp src/*.h)
-
-# Example for adding compiler flags target_compile_options(midi-to-key PUBLIC
-# ...)
-
-add_subdirectory(lib/rtmidi)
+find_package(RtMidi)
+# add_subdirectory(lib/rtmidi)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -19,12 +15,12 @@ FetchContent_Declare(
   GIT_TAG v3.4.0)
 FetchContent_MakeAvailable(tomlplusplus)
 
-add_executable(midi-to-key ${sources})
+add_executable(midi-to-key src/main.cpp)
 
 target_include_directories(midi-to-key PUBLIC src)
 
 target_link_libraries(midi-to-key tomlplusplus)
-target_link_libraries(midi-to-key rtmidi)
+target_link_libraries(midi-to-key RtMidi::rtmidi)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 

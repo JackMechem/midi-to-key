@@ -67,7 +67,7 @@ sudo pacman -S rtmidi tomlplusplus gcc cmake
 ##### 2.1 Clone the Project <a name="cai-2-1"></a>
 
 ```
-git clone --recursive https://github.com/JackMechem/midi-to-key.git # --recursive downloads submodules
+git clone https://github.com/JackMechem/midi-to-key.git
 
 cd midi-to-key
 ```

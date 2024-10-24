@@ -1,6 +1,7 @@
 # Midi to Key
 
-> A small, simple, and minimal program for using any midi controller as a macro pad on Linux.
+> A small, simple, and minimal program for using any midi controller as a macro pad on Linux.\
+> **Disclaimer:** Readme may be outdated!
 
 <details>
 
@@ -67,9 +68,9 @@ sudo pacman -S rtmidi tomlplusplus gcc cmake
 ##### 2.1 Clone the Project <a name="cai-2-1"></a>
 
 ```
-git clone https://github.com/JackMechem/midi-to-key.git
+git clone https://github.com/JackMechem/midirun.git
 
-cd midi-to-key
+cd midirun
 ```
 
 ##### 2.2 CD Or Make The Build Directory If It Doesn't Exist <a name="cai-2-2"></a>
@@ -82,7 +83,7 @@ cd build
 ##### 2.3 Build The Project <a name="cai-2-3"></a>
 
 ```
-cmake ..        # Must be in the midi-to-key/build directory!
+cmake ..        # Must be in the midirun/build directory!
 cmake --build .
 ```
 
@@ -96,27 +97,27 @@ sudo cmake --install .
 
 ## Usage <a name="usage"></a>
 
-> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midi-to-key accesses `/dev/uinput` directly.
+> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midirun accesses `/dev/uinput` directly.
 
 ### Help Page <a name="help-page"></a>
 
-##### To show this help page run `midi-to-key -h`
+##### To show this help page run `midirun -h`
 
 ```
 Usage:
   Help and List:
-    midi-to-key {--help|-h} | Shows Help Page
-    midi-to-key {--list-io|-lio} | Lists midi inputs and outputs
-    midi-to-key {--input-port|ip} <Port-Number> {--listen|-ln} | Listens to specified input port and displays midi note registered - Note: The {--input-port|-ip} flag must be typed before the {--listen|-ln} flag
+    midirun {--help|-h} | Shows Help Page
+    midirun [{--verbose|-v}] {--list-io|-lio} | Lists midi inputs and outputs
+    midirun [{--verbose|-v}] {--input-port|ip} <Port-Number> {--listen|-ln} | Listens to specified input port and displays midi note registered - Note: The {--input-port|-ip} flag must be typed before the {--listen|-ln} flag
 
     Examples:
-      midi-to-key -lio | Lists io
-      midi-to-key -h | Shows help page
-      midi-to-key -ip 2 -ln | Lists input from specified port #2
+      midirun -lio | Lists io
+      midirun -h | Shows help page
+      midirun -ip 2 -ln | Lists input from specified port #2
 
 
   Running The Program:
-    midi-to-key run [{--config|-c} </path/to/config>] - Note: Default config is $HOME/.config/midi-to-key/config.toml
+    midirun [{--verbose|-v}] run [{--config|-c} </path/to/config>]     midirun [{--verbose|-v}] run [{--config|-c} </path/to/config>]  - Note: Default config is $HOME/.config/midirun/config.toml
 ```
 
 ## Listing Midi IO and Listen On Port <a name="listing-io"></a>
@@ -127,9 +128,9 @@ The command below lists all midi inputs and output devices and their ports. <br 
 **Keep note of the port of the input device you want to use as this is used in the next step and the configuration file!**
 
 ```
-midi-to-key --list-io
+midirun --list-io
 # OR
-midi-to-key -lio
+midirun -lio
 ```
 
 ##### Example output:
@@ -152,14 +153,14 @@ Keep note of Byte 0 and Byte 1 for all of the buttons you want to map! <br /> By
 **This will be used in the configuration file later!**
 
 ```
-midi-to-key -ip 2 -ln               # Replace the 2 with what ever port you are using
+midirun -ip 2 -ln               # Replace the 2 with what ever port you are using
 OR
-midi-to-key --input-port 2 --listen # Replace the 2 with what ever port you are using
+midirun --input-port 2 --listen # Replace the 2 with what ever port you are using
 ```
 
 ## Running the Program <a name="running"></a>
 
-> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midi-to-key accesses `/dev/uinput` directly.
+> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midirun accesses `/dev/uinput` directly.
 
 ### Running With The Default Configuration Path <a name="running-default"></a>
 
@@ -168,13 +169,13 @@ The default configuration path is listed below.
 See the [configuration](#configuration) section to create a configuration file**
 
 ```
-~/.config/midi-to-key/config.toml
+~/.config/midirun/config.toml
 ```
 
 ##### The command below runs the program with the default configuration path
 
 ```
-midi-to-key run # May need to be run with sudo!
+midirun run # May need to be run with sudo!
 ```
 
 ### Running With a Custom Configuration Path <a name="running-custom"></a>
@@ -182,9 +183,9 @@ midi-to-key run # May need to be run with sudo!
 ##### The command below run the program with a custom configuration path
 
 ```
-midi-to-key run -c /path/to/config.toml
+midirun run -c /path/to/config.toml
 # OR
-midi-to-key run --config /path/to/config.toml
+midirun run --config /path/to/config.toml
 ```
 
 ## Configuration <a name="configuration"></a>
@@ -194,7 +195,7 @@ midi-to-key run --config /path/to/config.toml
 #### Default Configuration File Path <a name="configuration-default-path"></a>
 
 ```
-~/.config/midi-to-key/config.toml
+~/.config/midirun/config.toml
 ```
 
 ### Config Section <a name="configuration-config"></a>
@@ -281,11 +282,3 @@ byte1 = 39
 type = "command"
 command = "thunar"
 ```
-
----
-
----
-
----
-
-> Disclaimer: I am not very experienced in c++. There will be mistakes and there will be poorly written code. I am always learning and will maintain this project to the best of my ability!

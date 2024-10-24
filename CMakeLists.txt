@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(midi-to-key VERSION 1.0.0)
+project(midirun VERSION 1.0.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -15,12 +15,12 @@ FetchContent_Declare(
   GIT_TAG v3.4.0)
 FetchContent_MakeAvailable(tomlplusplus)
 
-add_executable(midi-to-key src/main.cpp)
+add_executable(midirun src/main.cpp)
 
-target_include_directories(midi-to-key PUBLIC src)
+target_include_directories(midirun PUBLIC src)
 
-target_link_libraries(midi-to-key tomlplusplus)
-target_link_libraries(midi-to-key RtMidi::rtmidi)
+target_link_libraries(midirun tomlplusplus)
+target_link_libraries(midirun RtMidi::rtmidi)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 

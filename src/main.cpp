@@ -16,6 +16,7 @@
 #endif
 
 bool done;
+bool verbose = false;
 static void finish(int ignore) { done = true; }
 
 void emit(int fd, int type, int code, int val) {
@@ -116,7 +117,7 @@ int listenToMidiPort(int port) {
 	}
 	if (nPorts < port) {
 		std::cout << "Port does not exist!\n";
-		std::cout << "See help page (midi-to-key {--help|h}) for more info.";
+		std::cout << "See help page (midirun {--help|h}) for more info.";
 	}
 
 	midiin->openPort(port - 1);
@@ -132,8 +133,9 @@ int listenToMidiPort(int port) {
 		stamp = midiin->getMessage(&message);
 		nBytes = message.size();
 		for (i = 0; i < nBytes; i++)
-			std::cout << "Byte " << i << " = " << (int)message[i] << ", ";
-		if (nBytes > 0)
+			if (verbose)
+				std::cout << "Byte " << i << " = " << (int)message[i] << ", ";
+		if (nBytes > 0 && verbose)
 			std::cout << "stamp = " << stamp << std::endl;
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -214,10 +216,13 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 
 		toml::array mappingData = *mappingTableArray.as_array();
 
-		std::cout << "Mapping data provided: \n";
+		if (verbose)
+			std::cout << "Config Data provided: \n";
 		for (const toml::node &mapping : mappingData) {
 			toml::table mappingData = *mapping.as_table();
-			std::cout << mappingData << std::endl << std::endl;
+			if (verbose)
+				std::cout << mappingData << std::endl << std::endl;
+
 			conf_mapping parsedMapping;
 			parsedMapping.name = mappingData["name"].value_or("NAN");
 			parsedMapping.byte0 = mappingData["byte0"].value_or(128);
@@ -250,8 +255,7 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 		}
 		if (nPorts < configData.inputPort.value()) {
 			std::cout << "Port does not exist!\n";
-			std::cout
-				<< "See help page (midi-to-key {--help|h}) for more info.";
+			std::cout << "See help page (midirun {--help|h}) for more info.";
 		}
 
 		midiin->openPort(configData.inputPort.value() - 1);
@@ -268,19 +272,22 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 			stamp = midiin->getMessage(&message);
 			nBytes = message.size();
 			for (i = 0; i < nBytes; i++) {
-				std::cout << "Byte " << i << " = " << (int)message[i] << ", ";
+				if (verbose)
+					std::cout << "Byte " << i << " = " << (int)message[i]
+							  << ", ";
 			}
 			if (nBytes > 0)
-				std::cout << "stamp = " << stamp << std::endl;
+				if (verbose)
+					std::cout << "stamp = " << stamp << std::endl;
 			if (nBytes > 0) {
 				for (int v = 0; v <= parsedMappingData.size() - 1; v++) {
 					conf_mapping newMapping = parsedMappingData[v];
 					if (newMapping.byte0 == (int)message[0] &&
 						newMapping.byte1 == (int)message[1]) {
-						std::cout
-							<< "Triggering mapping named: " << newMapping.name
-							<< std::endl
-							<< std::endl;
+						if (verbose)
+							std::cout << "Triggering mapping named: "
+									  << newMapping.name << std::endl
+									  << std::endl;
 						if (newMapping.type == "command") {
 							system((newMapping.command + " &").c_str());
 						}
@@ -324,30 +331,35 @@ std::string GetEnv(const std::string &var) {
 }
 
 void helpMessage() {
-	std::cout << "Midi To Key - Version " << APP_VERSION << "\n";
+	std::cout << "MidiRun - Version " << APP_VERSION << "\n";
 	std::cout << "Made by Jack Mechem -- Project Github: "
-				 "https://github.com/JackMechem/midi-to-key \n\n";
+				 "https://github.com/JackMechem/midirun \n\n";
 	std::cout << "Usage:\n";
 	std::cout << "  Help and List:\n";
-	std::cout << "    midi-to-key {--help|-h} | Shows Help Page\n";
-	std::cout << "    midi-to-key {--list-io|-lio} | Lists midi inputs and "
+	std::cout << "    midirun {--help|-h} | Shows Help Page\n";
+	std::cout << "    midirun [{--verbose|-v}] {--list-io|-lio} | Lists midi "
+				 "inputs and "
 				 "outputs\n";
 	std::cout
-		<< "    midi-to-key {--input-port|ip} <Port-Number> {--listen|-ln} "
+		<< "    midirun [{--verbose|-v}] {--input-port|ip} <Port-Number> "
+		   "{--listen|-ln} "
 		   "| Listens "
 		   "to specified input port and displays midi note registered - Note: "
 		   "The {--input-port|-ip} flag must "
 		   "be typed before the {--listen|-ln} flag\n\n";
 	std::cout << "    Examples:\n";
-	std::cout << "      midi-to-key -lio | Lists io\n";
-	std::cout << "      midi-to-key -h | Shows help page\n";
+	std::cout << "      midirun -lio | Lists io\n";
+	std::cout << "      midirun -h | Shows help page\n";
 	std::cout
-		<< "      midi-to-key -ip 2 -ln | Lists input from specified port #2\n";
+		<< "      midirun -ip 2 -ln | Lists input from specified port #2\n";
 	std::cout << std::endl << std::endl;
 	std::cout << "  Running The Program:\n";
+	std::cout << "    midirun [{--verbose|-v}] run [{--config|-c} "
+				 "</path/to/config>] ";
 	std::cout
-		<< "    midi-to-key run [{--config|-c} </path/to/config>] - Note: "
-		   "Default config is $HOME/.config/midi-to-key/config.toml\n";
+		<< "    midirun [{--verbose|-v}] run [{--config|-c} </path/to/config>] "
+		   " - Note: "
+		   "Default config is $HOME/.config/midirun/config.toml\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -357,7 +369,7 @@ int main(int argc, char *argv[]) {
 	// {{{ Get .config Directory
 	struct passwd *pw = getpwuid(getuid());
 	const std::string homedir = pw->pw_dir;
-	std::string config = homedir + "/.config/midi-to-key/config.toml";
+	std::string config = homedir + "/.config/midirun/config.toml";
 	// }}}
 
 	// {{{ Get Session Type From ENV Variable
@@ -369,6 +381,10 @@ int main(int argc, char *argv[]) {
 	if (argc > 1) {
 		for (int i = 0; i <= argc - 1; i++) {
 			std::string arg = argv[i];
+
+			if (arg == "--verbose" || arg == "-v") {
+				verbose = true;
+			}
 
 			if (arg == "run") {
 				// Get config argument
@@ -420,8 +436,9 @@ int main(int argc, char *argv[]) {
 					return 1;
 				}
 
-				std::cout << "Input port number provided: " << inPort
-						  << std::endl;
+				if (verbose)
+					std::cout << "Input port number provided: " << inPort
+							  << std::endl;
 				// Go to next argument as to skip the value given
 				i++;
 			}

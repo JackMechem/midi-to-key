@@ -1,3 +1,6 @@
+# Example MidiRun Configuration File
+# Default path: $HOME/.config/midirun/config.toml
+
 [config]
 inputPort = 2 # The input port of the midi device
 
@@ -20,4 +23,4 @@ name = "Bottom Right"
 byte0 = 144
 byte1 = 39
 type = "command"
-key = "thunar"
+key = ar"

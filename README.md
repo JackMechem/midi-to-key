@@ -1,4 +1,4 @@
-# Midi to Key
+# MidiRun
 
 > A small, simple, and minimal program for using any midi controller as a macro pad on Linux.\
 > **Disclaimer:** Readme may be outdated!

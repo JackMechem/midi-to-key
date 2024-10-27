@@ -108,16 +108,11 @@ Usage:
   Help and List:
     midirun {--help|-h} | Shows Help Page
     midirun [{--verbose|-v}] {--list-io|-lio} | Lists midi inputs and outputs
-    midirun [{--verbose|-v}] {--input-port|ip} <Port-Number> {--listen|-ln} | Listens to specified input port and displays midi note registered - Note: The {--input-port|-ip} flag must be typed before the {--listen|-ln} flag
-
-    Examples:
-      midirun -lio | Lists io
-      midirun -h | Shows help page
-      midirun -ip 2 -ln | Lists input from specified port #2
+    midirun [{--verbose|-v}] {--listen|-ln} <Port-Number> | Listens to specified input port and displays midi note registered
 
 
   Running The Program:
-    midirun [{--verbose|-v}] run [{--config|-c} </path/to/config>]     midirun [{--verbose|-v}] run [{--config|-c} </path/to/config>]  - Note: Default config is $HOME/.config/midirun/config.toml
+    midirun [{--verbose|-v}] [{--config|-c} </path/to/config>] | Note: Default config is $HOME/.config/midirun/config.toml
 ```
 
 ## Listing Midi IO and Listen On Port <a name="listing-io"></a>
@@ -148,14 +143,13 @@ There are 3 MIDI output ports available.
 ### Listening to a midi port <a name="listing-io-2"></a>
 
 The command below listens to any inputs coming from the port given (in this example, port #2). <br />
-**NOTE: This command must be typed in this order; the port is first.** <br />
 Keep note of Byte 0 and Byte 1 for all of the buttons you want to map! <br /> Byte 0 is used to tell if a button is pressed down or released and Byte 1 translates to the midi note being played. <br />
 **This will be used in the configuration file later!**
 
 ```
-midirun -ip 2 -ln               # Replace the 2 with what ever port you are using
+midirun -ln 2             # Replace the 2 with what ever port you are using
 OR
-midirun --input-port 2 --listen # Replace the 2 with what ever port you are using
+midirun --listen 2        # Replace the 2 with what ever port you are using
 ```
 
 ## Running the Program <a name="running"></a>
@@ -183,9 +177,9 @@ midirun run # May need to be run with sudo!
 ##### The command below run the program with a custom configuration path
 
 ```
-midirun run -c /path/to/config.toml
+midirun -c /path/to/config.toml
 # OR
-midirun run --config /path/to/config.toml
+midirun --config /path/to/config.toml
 ```
 
 ## Configuration <a name="configuration"></a>

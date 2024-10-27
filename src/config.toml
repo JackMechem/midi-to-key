@@ -1,26 +1,81 @@
-# Example MidiRun Configuration File
-# Default path: $HOME/.config/midirun/config.toml
+# Key Codes:
+# sudo showkey --keycodes
+# 
+# 125: mod
+# 42: shift
+# 31: s
 
 [config]
-inputPort = 2 # The input port of the midi device
+inputPort = 2
+
+
+## Bottom Row
 
 [[mapping]]
-name = "Bottom Left" # Does not affect anything
-byte0 = 144 # Button up or down
-byte1 = 37 # The key value
-type = "command" # Either "command" or "key"
-key = "kitty" # The event. Either a command to launch a program or a key value
+name = "Bottom Left - Terminal"
+byte0 = 144
+byte1 = 37
+type = "command"
+command = "kitty"
 
 [[mapping]]
-name = "Bottom Middle"
+name = "Bottom Middle - File Browser"
 byte0 = 144
 byte1 = 38
 type = "command"
-key = "firefox"
+command = "thunar"
 
 [[mapping]]
-name = "Bottom Right"
+name = "Bottom Right - Firefox"
 byte0 = 144
 byte1 = 39
 type = "command"
-key = ar"
+command = "firefox"
+
+
+## Middle Row
+
+[[mapping]]
+name = "Middle Left - Copy Full Number Date"
+byte0=144
+byte1=42
+type="command"
+command = "date +%m-%d-%+4Y | wl-copy"
+
+[[mapping]]
+name = "Middle Middle - Copy Full Word Date"
+byte0=144
+byte1=43
+type="command"
+command = 'date "+%A, %b %d, %+4Y" | wl-copy'
+
+[[mapping]]
+name = "Middle Right - Copy 12 Hour Time"
+byte0=144
+byte1=36
+type="command"
+command = 'date "+%I:%M %p" | wl-copy'
+
+
+## Top Row
+
+[[mapping]]
+name = "Top Left - Screenshot"
+byte0 = 144
+byte1 = 47
+type = "key"
+key = [125, 42, 31]
+
+[[mapping]]
+name = "Top Middle - Special Work Space"
+byte0 = 144
+byte1 = 40
+type = "key"
+key = [125, 24]
+
+[[mapping]]
+name = "Top Right - Open CSUN Canvas"
+byte0 = 144
+byte1 = 41
+type = "command"
+command = "firefox --new-tab --url https://canvas.csun.edu/"

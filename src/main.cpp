@@ -1,3 +1,6 @@
+#include <cctype>
+#include <string>
+#include <unordered_map>
 #define APP_VERSION "1.0.0"
 
 #include "rtmidi/RtMidi.h"
@@ -109,6 +112,8 @@ int listenToMidiPort(int port) {
 	int nBytes, i;
 	double stamp;
 
+	std::cout << "Given Port: " << port;
+
 	// Check if there any ports just in case
 	unsigned int nPorts = midiin->getPortCount();
 	if (nPorts == 0) {
@@ -133,9 +138,8 @@ int listenToMidiPort(int port) {
 		stamp = midiin->getMessage(&message);
 		nBytes = message.size();
 		for (i = 0; i < nBytes; i++)
-			if (verbose)
-				std::cout << "Byte " << i << " = " << (int)message[i] << ", ";
-		if (nBytes > 0 && verbose)
+			std::cout << "Byte " << i << " = " << (int)message[i] << ", ";
+		if (nBytes > 0)
 			std::cout << "stamp = " << stamp << std::endl;
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -340,116 +344,85 @@ void helpMessage() {
 	std::cout << "    midirun [{--verbose|-v}] {--list-io|-lio} | Lists midi "
 				 "inputs and "
 				 "outputs\n";
-	std::cout
-		<< "    midirun [{--verbose|-v}] {--input-port|ip} <Port-Number> "
-		   "{--listen|-ln} "
-		   "| Listens "
-		   "to specified input port and displays midi note registered - Note: "
-		   "The {--input-port|-ip} flag must "
-		   "be typed before the {--listen|-ln} flag\n\n";
-	std::cout << "    Examples:\n";
-	std::cout << "      midirun -lio | Lists io\n";
-	std::cout << "      midirun -h | Shows help page\n";
-	std::cout
-		<< "      midirun -ip 2 -ln | Lists input from specified port #2\n";
+	std::cout << "    midirun [{--verbose|-v}] "
+				 "{--listen|-ln} <Port-Number> "
+				 "| Listens "
+				 "to specified input port and displays midi note registered\n";
 	std::cout << std::endl << std::endl;
 	std::cout << "  Running The Program:\n";
-	std::cout << "    midirun [{--verbose|-v}] run [{--config|-c} "
-				 "</path/to/config>] ";
-	std::cout
-		<< "    midirun [{--verbose|-v}] run [{--config|-c} </path/to/config>] "
-		   " - Note: "
-		   "Default config is $HOME/.config/midirun/config.toml\n";
+	std::cout << "    midirun [{--verbose|-v}] [{--config|-c} "
+				 "</path/to/config>] | Note: Default config is "
+				 "$HOME/.config/midirun/config.toml\n";
 }
 
 int main(int argc, char *argv[]) {
 
-	int inPort = 0;
-
-	// {{{ Get .config Directory
+	// {{{ Get Home Directory ()
 	struct passwd *pw = getpwuid(getuid());
 	const std::string homedir = pw->pw_dir;
-	std::string config = homedir + "/.config/midirun/config.toml";
 	// }}}
+
+	std::unordered_map<std::string, std::string> argMap;
+	argMap["run"] = "true";
+	argMap["config"] = homedir + "/.config/midirun/config.toml";
 
 	// {{{ Get Session Type From ENV Variable
 	std::string sessionType = GetEnv("XDG_SESSION_TYPE");
-	std::cout << "Detected Session Type: " << sessionType << "\n";
 	// }}}
 
 	// {{{ Loop Through Command Args
-	if (argc > 1) {
-		for (int i = 0; i <= argc - 1; i++) {
-			std::string arg = argv[i];
-
-			if (arg == "--verbose" || arg == "-v") {
-				verbose = true;
-			}
-
-			if (arg == "run") {
-				// Get config argument
-				for (int u = 0; u <= argc - 1; u++) {
-					std::string argtwo = argv[u];
-					if (argtwo == "--config" || argtwo == "-c") {
-						config = argv[u + 1];
-						std::cout << "Provided config location: " << config
-								  << std::endl;
-						break;
-					}
-				}
-				listenAndMap(config, sessionType);
-			}
-
-			// Prints help message and exits program
-			if (arg == "--help" || arg == "-h") {
-				helpMessage();
-				return 0;
-			}
-
-			// Lists all midi inputs and outputs and exits the program
-			if (arg == "--list-io" || arg == "-lio") {
-				listMidiIO();
-				return 0;
-			}
-
-			// Sets the input midi port number
-			if (arg == "--input-port" || arg == "-ip") {
-
-				// Next argument
-				std::string narg = argv[i + 1];
-
-				try {
-					std::size_t pos;
-					inPort = std::stoi(narg, &pos);
-					if (pos < narg.size()) {
-						std::cerr << "Trailing characters after input port "
-									 "number: "
-								  << narg << '\n';
-						return 1;
-					}
-				} catch (std::invalid_argument const &ex) {
-					std::cerr << "Invalid input port number: " << narg << '\n';
-					return 1;
-				} catch (std::out_of_range const &ex) {
-					std::cerr << "Input port number out of range: " << narg
-							  << '\n';
-					return 1;
-				}
-
-				if (verbose)
-					std::cout << "Input port number provided: " << inPort
-							  << std::endl;
-				// Go to next argument as to skip the value given
-				i++;
-			}
-
-			if (arg == "--listen" || arg == "-ln") {
-				listenToMidiPort(inPort);
-			}
+	for (int i = 0; i < argc; i++) {
+		std::string arg = argv[i];
+		if (arg == "--verbose" || arg == "-v") {
+			argMap["verbose"] = "true";
+		} else if (arg == "--help" || arg == "-h") {
+			argMap["help"] = "true";
+			argMap["run"] = "false";
+		} else if (arg == "--config" || arg == "-c") {
+			argMap["config"] = argv[i + 1];
+		} else if (arg == "--list-io" || arg == "-lio") {
+			argMap["run"] = "false";
+		} else if (arg == "--listen" || arg == "-ln") {
+			argMap["listen"] = "true";
+			argMap["listenPort"] = argv[i + 1];
+			argMap["run"] = "false";
 		}
-	} else {
-		helpMessage();
 	}
+	if (argMap.count("verbose")) {
+		verbose = true;
+	}
+
+	if (verbose) {
+		std::cout << "Verbose Mode Enabled\n"
+				  << "--------------------\n"
+				  << "Detected Session Type: " << sessionType << "\n";
+	}
+
+	if (argMap.count("help") && argMap.count("listen")) {
+		std::cerr << "Invalid Argument(s)!\n"
+				  << "See midirun --help for more info.";
+		return 0;
+	} else if (argMap.count("help") && argMap.count("listIO")) {
+		std::cerr << "Invalid Argument(s)!\n"
+				  << "See midirun --help for more info.\n";
+		return 0;
+	} else if (argMap.count("help")) {
+		helpMessage();
+		return 0;
+	}
+	if (argMap.count("listIO")) {
+		listMidiIO();
+		return 0;
+	}
+	if (argMap.count("listen") && argMap.count("listenPort")) {
+		listenToMidiPort(std::stoi(argMap["listenPort"]));
+	}
+
+	if (argMap["run"] == "true") {
+		std::cout << "Config Path: " << argMap["config"] << std::endl;
+		listenAndMap(argMap["config"], sessionType);
+	}
+
 	// }}}
 
 	return 0;

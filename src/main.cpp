@@ -1,7 +1,7 @@
 #include <cctype>
 #include <string>
 #include <unordered_map>
-#define APP_VERSION "1.0.0"
+#define APP_VERSION "1.0.1"
 
 #include "rtmidi/RtMidi.h"
 #include <iostream>

@@ -50,6 +50,7 @@
 ##### :apple: MacOS <a name="support-macOS"></a>
 
 - Full Support for MacOS
+  - Key Codes can be found [here](https://eastmanreference.com/complete-list-of-applescript-key-codes)
 
 ## Dependencies <a name="dependencies"></a>
 

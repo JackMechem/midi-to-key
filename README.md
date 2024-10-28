@@ -10,11 +10,12 @@
 
 - [Support](#support)
   - [Linux](#support-linux)
-  - [macOS](#support-macOS)
+  - [MacOS](#support-macOS)
 - [Dependencies](#dependencies)
 - [Compiling and Installing](#comp-and-installing)
   - [Install Dependencies](#cai-1)
     - [Arch Linux](#cai-1-1)
+    - [MacOS (brew)](#cai-1-2)
   - [Clone and Compile](#cai-2)
     - [Clone](#cai-2-1)
     - [Build Directory](#cai-2-2)
@@ -71,6 +72,14 @@
 
 ```
 sudo pacman -S rtmidi tomlplusplus gcc cmake
+```
+
+##### 1.2 MacOS (brew) <a name="cai-1-2"></a>
+
+###### :star: rtmidi and tomlplusplus are optional as they should be installed automatically along with MidiRun.
+
+```
+brew install rtmidi tomlplusplus gcc cmake
 ```
 
 ### 2. Clone the Project and Compile <a name="cai-2"></a>

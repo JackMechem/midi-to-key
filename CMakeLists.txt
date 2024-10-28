@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.20)
 project(midirun VERSION 1.2.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 if(APPLE)
 
-    set(CMAKE_EXE_LINKER_FLAGS "-framework CoreFoundation -framework Carbon")
+  set(CMAKE_EXE_LINKER_FLAGS "-framework CoreFoundation -framework Carbon")
 
 endif(APPLE)
 

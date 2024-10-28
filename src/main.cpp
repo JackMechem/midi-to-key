@@ -339,6 +339,11 @@ void keyPressUp(int key) {
 void keyPress(std::vector<int> keys) {
 	for (int key : keys) {
 		keyPressDown(key);
+
+		// Caps Lock
+		if (key == 0x39) {
+			keyPressUp(key);
+		}
 	}
 	for (int key : keys) {
 		keyPressUp(key);

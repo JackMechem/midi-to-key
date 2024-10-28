@@ -338,8 +338,10 @@ void keyPressUp(int key) {
 
 void keyPress(std::vector<int> keys) {
 	for (int key : keys) {
-		keyPressUp(key);
 		keyPressDown(key);
+	}
+	for (int key : keys) {
+		keyPressUp(key);
 	}
 }
 int listenAndMap(std::string configLocation) {

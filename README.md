@@ -49,6 +49,8 @@
 
 ##### :apple: MacOS <a name="support-macOS"></a>
 
+- Full Support for MacOS
+
 ## Dependencies <a name="dependencies"></a>
 
 - [rtmidi](https://archlinux.org/packages/extra/x86_64/rtmidi/)

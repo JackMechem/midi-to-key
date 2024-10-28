@@ -381,6 +381,7 @@ int main(int argc, char *argv[]) {
 		} else if (arg == "--config" || arg == "-c") {
 			argMap["config"] = argv[i + 1];
 		} else if (arg == "--list-io" || arg == "-lio") {
+			argMap["listIO"] = "true";
 			argMap["run"] = "false";
 		} else if (arg == "--listen" || arg == "-ln") {
 			argMap["listen"] = "true";

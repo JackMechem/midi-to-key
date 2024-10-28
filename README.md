@@ -10,6 +10,7 @@
 
 - [Support](#support)
   - [Linux](#support-linux)
+  - [macOS](#support-macOS)
 - [Dependencies](#dependencies)
 - [Compiling and Installing](#comp-and-installing)
   - [Install Dependencies](#cai-1)
@@ -46,10 +47,12 @@
 
 - Full support for Wayland and X11
 
+##### :apple: MacOS <a name="support-macOS"></a>
+
 ## Dependencies <a name="dependencies"></a>
 
 - [rtmidi](https://archlinux.org/packages/extra/x86_64/rtmidi/)
-- [jack](https://jackaudio.org/downloads/)
+- [jack (not for macOS)](https://jackaudio.org/downloads/)
 - [toml++ (tomlplusplus)](https://archlinux.org/packages/extra/x86_64/tomlplusplus/)
 - [cmake](https://archlinux.org/packages/extra/x86_64/cmake/)
 - [gcc](https://archlinux.org/packages/core/x86_64/gcc/)

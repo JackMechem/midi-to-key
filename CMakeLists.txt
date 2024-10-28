@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 3.29)
-project(midirun VERSION 1.0.2)
+project(midirun VERSION 1.2.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
+
+if(APPLE)
+
+    set(CMAKE_EXE_LINKER_FLAGS "-framework CoreFoundation -framework Carbon")
+
+endif(APPLE)
 
 # find_package(RtMidi) add_subdirectory(lib/rtmidi)
 
@@ -25,7 +31,7 @@ add_library(rtmidi::rtmidi INTERFACE IMPORTED)
 target_link_libraries(rtmidi::rtmidi INTERFACE rtmidi)
 target_include_directories(rtmidi::rtmidi INTERFACE ${rtmidi_src_SOURCE_DIR})
 
-add_executable(midirun src/main.cpp)
+add_executable(midirun src/main.cpp src/main.h)
 
 target_include_directories(midirun PUBLIC src)
 
@@ -37,3 +43,9 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+if(APPLE)
+
+  install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+endif(APPLE)

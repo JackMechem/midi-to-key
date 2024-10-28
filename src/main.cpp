@@ -1,53 +1,8 @@
-#include <cctype>
-#include <string>
-#include <unordered_map>
-#define APP_VERSION "1.0.2"
-
-#include "rtmidi/RtMidi.h"
-#include <iostream>
-#include <pwd.h>
-#include <signal.h>
-#include <thread>
-#include <toml++/toml.hpp>
-
-#ifdef __unix__
-
-#include <fcntl.h>
-#include <linux/input.h>
-#include <linux/uinput.h>
-
-#endif
+#include "main.h"
 
 bool done;
 bool verbose = false;
 static void finish(int ignore) { done = true; }
-
-void emit(int fd, int type, int code, int val) {
-	struct input_event ie;
-
-	ie.type = type;
-	ie.code = code;
-	ie.value = val;
-	ie.time.tv_sec = 0;
-	ie.time.tv_usec = 0;
-
-	write(fd, &ie, sizeof(ie));
-}
-
-int keyPress(int fd, std::vector<int> keyCodes) {
-
-	for (int i = 0; i < keyCodes.size(); i++) {
-		emit(fd, EV_KEY, keyCodes[i], 1);
-		emit(fd, EV_SYN, SYN_REPORT, 0);
-	}
-
-	for (int i = 0; i < keyCodes.size(); i++) {
-		emit(fd, EV_KEY, keyCodes[i], 0);
-		emit(fd, EV_SYN, SYN_REPORT, 0);
-	}
-
-	return 0;
-}
 
 int listMidiIO() {
 
@@ -112,8 +67,6 @@ int listenToMidiPort(int port) {
 	int nBytes, i;
 	double stamp;
 
-	std::cout << "Given Port: " << port;
-
 	// Check if there any ports just in case
 	unsigned int nPorts = midiin->getPortCount();
 	if (nPorts == 0) {
@@ -147,11 +100,40 @@ int listenToMidiPort(int port) {
 
 cleanup:
 	delete midiin;
+	return 0;
+}
+
+// {{{ listenAndMap function for LINUX (unix)
+#ifdef __unix__
+
+void emit(int fd, int type, int code, int val) {
+	struct input_event ie;
+
+	ie.type = type;
+	ie.code = code;
+	ie.value = val;
+	ie.time.tv_sec = 0;
+	ie.time.tv_usec = 0;
+
+	write(fd, &ie, sizeof(ie));
+}
+
+int keyPress(int fd, std::vector<int> keyCodes) {
+
+	for (int i = 0; i < keyCodes.size(); i++) {
+		emit(fd, EV_KEY, keyCodes[i], 1);
+		emit(fd, EV_SYN, SYN_REPORT, 0);
+	}
+
+	for (int i = 0; i < keyCodes.size(); i++) {
+		emit(fd, EV_KEY, keyCodes[i], 0);
+		emit(fd, EV_SYN, SYN_REPORT, 0);
+	}
 
 	return 0;
 }
 
-int listenAndMap(std::string configLocation, std::string sessionType) {
+int listenAndMap(std::string configLocation) {
 
 	// {{{ Create Variables For Reading Midi Input
 	RtMidiIn *midiin = new RtMidiIn();
@@ -325,6 +307,196 @@ int listenAndMap(std::string configLocation, std::string sessionType) {
 	return 0;
 }
 
+#endif
+
+// }}}
+
+// {{{ listenAndMap function for Apple
+#ifdef __APPLE__
+
+void keyPressDown(int key) {
+	CGEventSourceRef evSrc =
+		CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+	CGEventRef evt = CGEventCreateKeyboardEvent(evSrc, (CGKeyCode)key, true);
+	CGEventPost(kCGHIDEventTap, evt);
+	CFRelease(evt);
+	CFRelease(evSrc);
+
+	usleep(60);
+}
+
+void keyPressUp(int key) {
+	CGEventSourceRef src =
+		CGEventSourceCreate(kCGEventSourceStateHIDSystemState);
+	CGEventRef evt = CGEventCreateKeyboardEvent(src, (CGKeyCode)key, false);
+	CGEventPost(kCGHIDEventTap, evt);
+	CFRelease(evt);
+	CFRelease(src);
+
+	usleep(60);
+}
+
+void keyPress(std::vector<int> keys) {
+	for (int key : keys) {
+		keyPressUp(key);
+		keyPressDown(key);
+	}
+}
+int listenAndMap(std::string configLocation) {
+
+	// {{{ Create Variables For Reading Midi Input
+	RtMidiIn *midiin = new RtMidiIn();
+	std::vector<unsigned char> message;
+	int nBytes, i;
+	double stamp;
+	// }}}
+
+	struct conf_config {
+		std::optional<int> inputPort;
+	};
+
+	struct conf_mapping {
+		std::string name;
+		int byte0;
+		int byte1;
+		std::string type;
+		std::string command;
+		std::vector<int> key;
+	};
+
+	try {
+
+		// {{{ File parsing
+		toml::table parsedToml = toml::parse_file(configLocation);
+
+		// Config Section
+		conf_config configData;
+		configData.inputPort = parsedToml["config"]["inputPort"].value<int>();
+		if (!configData.inputPort.has_value()) {
+			std::cout << "No input value provided!\n";
+			return 1;
+		}
+		std::cout << "Provided midi input port: "
+				  << configData.inputPort.value() << std::endl
+				  << std::endl;
+
+		// Mapping Section
+		std::vector<conf_mapping> parsedMappingData;
+
+		auto mappingTableArray = parsedToml["mapping"];
+
+		toml::array mappingData = *mappingTableArray.as_array();
+
+		if (verbose)
+			std::cout << "Config Data provided: \n";
+		for (const toml::node &mapping : mappingData) {
+			toml::table mappingData = *mapping.as_table();
+
+			if (verbose)
+				std::cout << mappingData << std::endl << std::endl;
+
+			conf_mapping parsedMapping;
+			parsedMapping.name = mappingData["name"].value_or("NAN");
+			parsedMapping.byte0 = mappingData["byte0"].value_or(128);
+			parsedMapping.byte1 = mappingData["byte1"].value_or(0);
+			parsedMapping.type = mappingData["type"].value_or("command");
+			if (parsedMapping.type == "command") {
+				parsedMapping.command = mappingData["command"].value_or("0");
+			} else if (parsedMapping.type == "key") {
+				std::vector<int> parsedKeys;
+				auto keyArray = mappingData["key"];
+				toml::array keyData = *keyArray.as_array();
+				for (const toml::node &keyValue : keyData) {
+					parsedKeys.push_back(keyValue.value_or(0));
+				}
+				parsedMapping.key = parsedKeys;
+			}
+
+			parsedMappingData.push_back(parsedMapping);
+		}
+
+		// }}}
+
+		// {{{ Midi Device And Map Loop
+
+		// Check if there any ports just in case
+		unsigned int nPorts = midiin->getPortCount();
+		if (nPorts == 0) {
+			std::cout << "No ports available!\n";
+			goto cleanup;
+		}
+		if (nPorts < configData.inputPort.value()) {
+			std::cout << "Port does not exist!\n";
+			std::cout << "See help page (midirun {--help|h}) for more info.";
+		}
+
+		midiin->openPort(configData.inputPort.value() - 1);
+
+		midiin->ignoreTypes(false, false, false);
+
+		done = false;
+		(void)signal(SIGINT, finish);
+
+		// Periodically check input queue.
+		std::cout << "Reading MIDI from port " << configData.inputPort.value()
+				  << " -- quit with Ctrl-C.\n";
+		while (!done) {
+			stamp = midiin->getMessage(&message);
+			nBytes = message.size();
+			for (i = 0; i < nBytes; i++) {
+				if (verbose)
+					std::cout << "Byte " << i << " = " << (int)message[i]
+							  << ", ";
+			}
+			if (nBytes > 0)
+				if (verbose)
+					std::cout << "stamp = " << stamp << std::endl;
+			if (nBytes > 0) {
+				for (int v = 0; v <= parsedMappingData.size() - 1; v++) {
+					conf_mapping newMapping = parsedMappingData[v];
+					if (newMapping.byte0 == (int)message[0] &&
+						newMapping.byte1 == (int)message[1]) {
+						if (verbose)
+							std::cout << "Triggering mapping named: "
+									  << newMapping.name << std::endl
+									  << std::endl;
+						if (newMapping.type == "command") {
+#ifdef __unix__
+							system((newMapping.command + " &").c_str());
+#endif
+#ifdef __APPLE__
+							system((newMapping.command + " &").c_str());
+#endif
+						}
+						if (newMapping.type == "key") {
+							keyPress(newMapping.key);
+						}
+					}
+				}
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+		// }}}
+
+	cleanup:
+		delete midiin;
+
+		return 0;
+
+	} catch (const toml::parse_error &err) {
+		std::cerr << "Error parsing file '" << err.source().path << "':\n"
+				  << err.description() << "\n (" << err.source().begin << ")\n";
+		return 1;
+	}
+
+	return 0;
+}
+
+#endif
+
+// }}}
+
 std::string GetEnv(const std::string &var) {
 	const char *val = std::getenv(var.c_str());
 	if (val == nullptr) {
@@ -366,10 +538,6 @@ int main(int argc, char *argv[]) {
 	argMap["run"] = "true";
 	argMap["config"] = homedir + "/.config/midirun/config.toml";
 
-	// {{{ Get Session Type From ENV Variable
-	std::string sessionType = GetEnv("XDG_SESSION_TYPE");
-	// }}}
-
 	// {{{ Loop Through Command Args
 	for (int i = 0; i < argc; i++) {
 		std::string arg = argv[i];
@@ -395,8 +563,7 @@ int main(int argc, char *argv[]) {
 
 	if (verbose) {
 		std::cout << "Verbose Mode Enabled\n"
-				  << "--------------------\n"
-				  << "Detected Session Type: " << sessionType << "\n";
+				  << "--------------------\n";
 	}
 
 	if (argMap.count("help") && argMap.count("listen")) {
@@ -421,7 +588,7 @@ int main(int argc, char *argv[]) {
 
 	if (argMap["run"] == "true") {
 		std::cout << "Config Path: " << argMap["config"] << std::endl;
-		listenAndMap(argMap["config"], sessionType);
+		listenAndMap(argMap["config"]);
 	}
 
 	// }}}

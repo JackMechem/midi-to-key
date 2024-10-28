@@ -46,20 +46,20 @@
 ##### :penguin: Linux <a name="support-linux"></a>
 
 - Full support for Wayland and X11
+  - Key Codes can be found in the [**key codes**](#configuration-mapping-key-codes) section.
 
 ##### :apple: MacOS <a name="support-macOS"></a>
 
 - Full Support for MacOS
-  - Key Codes can be found [here](https://eastmanreference.com/complete-list-of-applescript-key-codes)
+  - Key Codes can be found [**here**](https://eastmanreference.com/complete-list-of-applescript-key-codes) or in the [**key codes**](#configuration-mapping-key-codes) section.
 
 ## Dependencies <a name="dependencies"></a>
 
-- [rtmidi](https://archlinux.org/packages/extra/x86_64/rtmidi/)
-- [jack (not for macOS)](https://jackaudio.org/downloads/)
-- [toml++ (tomlplusplus)](https://archlinux.org/packages/extra/x86_64/tomlplusplus/)
-- [cmake](https://archlinux.org/packages/extra/x86_64/cmake/)
-- [gcc](https://archlinux.org/packages/core/x86_64/gcc/)
-- uinput linux kernel module (for simulating key strokes)
+- [**rtmidi**](https://archlinux.org/packages/extra/x86_64/rtmidi/)
+- [**jack (not for macOS)**](https://jackaudio.org/downloads/)
+- [**toml++ (tomlplusplus)**](https://archlinux.org/packages/extra/x86_64/tomlplusplus/)
+- [**cmake**](https://archlinux.org/packages/extra/x86_64/cmake/)
+- [**gcc**](https://archlinux.org/packages/core/x86_64/gcc/)
 
 ## Compiling and Installing <a name="comp-and-installing"></a>
 
@@ -242,20 +242,27 @@ key = [2, 3, 4]        # Key codes that will be simulated when the event is call
 
 #### Key Codes <a name="configuration-mapping-key-codes"></a>
 
-###### :warning: This program uses linux input event codes!
-
-To find out what key codes translate to what keys, [see this article (the section on identifying keycodes in console).](https://wiki.archlinux.org/title/Keyboard_input#Identifying_keycodes_in_console) <br/>
-You can also run the command below:
+##### Linux (linux input event codes)
 
 ```
 sudo showkey --keycodes
 ```
 
-All key codes can also be found in [this header file](https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h) located in the linux kernel source.
+Or [see this article (the section on identifying keycodes in console).](https://wiki.archlinux.org/title/Keyboard_input#Identifying_keycodes_in_console) <br/>
+
+Or all key codes can also be found in [this header file](https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h) located in the linux kernel source.
+
+##### MacOS
+
+###### :warning: Not full implemented!
+
+Because of the way virtual keyboard inputs work on MacOS, every key code represents the physical key being pressed. Currently, it is not possible to consistently simulate capital letters or other letters or symbols that require shift or caps lock to be pressed (coming soon!).
+
+A good guide for finding the key codes can be found [**here**](https://eastmanreference.com/complete-list-of-applescript-key-codes).
 
 ### Example Configuration <a name="configuration-example"></a>
 
-An example configuration file can be found in the src/ directory of the project source, or below
+#### Linux
 
 ```
 [config]
@@ -281,4 +288,32 @@ byte0 = 144
 byte1 = 39
 type = "command"
 command = "thunar"
+```
+
+#### MacOS
+
+```
+[config]
+inputPort = 3          # Port of the midi input device
+
+[[mapping]]            # Every mapping entry is written exactly like this
+name = "Bottom Left"   # Name of the mapping that shows up in console
+byte0 = 144            # Byte 0 (button position) of the button or event
+byte1 = 37             # Byte 1 (note) of the button or event
+type = "command"       # Type of event either "command" or "key"
+command = "open -a kitty"      # command executed when the event is called
+
+[[mapping]]
+name = "Bottom Middle"
+byte0 = 144
+byte1 = 38
+type = "key"
+key = [4, 14, 37, 37, 31] # Key codes that will be simulated when the event is called (translates to hello)
+
+[[mapping]]
+name = "Bottom Right"
+byte0 = 144
+byte1 = 39
+type = "command"
+command = "open -a firefox" # On MacOS, you have to use the open -a command to open applications.
 ```

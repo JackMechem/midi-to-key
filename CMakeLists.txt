@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(midirun VERSION 1.0.1)
+project(midirun VERSION 1.0.2)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

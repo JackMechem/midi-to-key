@@ -1,7 +1,6 @@
-# MidiRun
+# :musical_keyboard: MidiRun
 
-> A small, simple, and minimal program for using any midi controller as a macro pad on Linux.\
-> **Disclaimer:** Readme may be outdated!
+###### A small, simple, and minimal program for using any midi controller as a macro pad on Linux.
 
 <details>
 
@@ -39,15 +38,18 @@
 
 </details>
 
+---
+
 ## Support <a name="support"></a>
 
-##### Linux <a name="support-linux"></a>
+##### :penguin: Linux <a name="support-linux"></a>
 
 - Full support for Wayland and X11
 
 ## Dependencies <a name="dependencies"></a>
 
 - [rtmidi](https://archlinux.org/packages/extra/x86_64/rtmidi/)
+- [jack](https://jackaudio.org/downloads/)
 - [toml++ (tomlplusplus)](https://archlinux.org/packages/extra/x86_64/tomlplusplus/)
 - [cmake](https://archlinux.org/packages/extra/x86_64/cmake/)
 - [gcc](https://archlinux.org/packages/core/x86_64/gcc/)
@@ -59,6 +61,8 @@
 
 ##### 1.1 Arch Linux <a name="cai-1-1"></a>
 
+###### :star: rtmidi and tomlplusplus are optional as they should be installed automatically along with MidiRun.
+
 ```
 sudo pacman -S rtmidi tomlplusplus gcc cmake
 ```
@@ -68,9 +72,9 @@ sudo pacman -S rtmidi tomlplusplus gcc cmake
 ##### 2.1 Clone the Project <a name="cai-2-1"></a>
 
 ```
-git clone https://github.com/JackMechem/midirun.git
+git clone https://github.com/JackMechem/MidiRun.git
 
-cd midirun
+cd MidiRun
 ```
 
 ##### 2.2 CD Or Make The Build Directory If It Doesn't Exist <a name="cai-2-2"></a>
@@ -82,12 +86,16 @@ cd build
 
 ##### 2.3 Build The Project <a name="cai-2-3"></a>
 
+###### :warning: Must be in `MidiRun/build/` directory!
+
 ```
 cmake ..        # Must be in the midirun/build directory!
 cmake --build .
 ```
 
 ##### 2.4 Install The Project <a name="cai-2-4"></a>
+
+###### :warning: Must be in `MidiRun/build/` directory!
 
 ```
 sudo cmake --install .
@@ -97,7 +105,7 @@ sudo cmake --install .
 
 ## Usage <a name="usage"></a>
 
-> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midirun accesses `/dev/uinput` directly.
+###### :warning: If there are any errors when trying to simulate keystrokes, try running with sudo. For a user to run MidiRun without sudo, they will need read and write permissions to `/dev/uinput`. [Possible Solution](https://stackoverflow.com/questions/11939255/writing-to-dev-uinput-on-ubuntu-12-04)
 
 ### Help Page <a name="help-page"></a>
 
@@ -119,8 +127,7 @@ Usage:
 
 ### Listing all inputs and outputs <a name="listing-io-1"></a>
 
-The command below lists all midi inputs and output devices and their ports. <br />
-**Keep note of the port of the input device you want to use as this is used in the next step and the configuration file!**
+###### :warning: Keep note of the port of the input device you want to use as this is used in the next step and the configuration file!
 
 ```
 midirun --list-io
@@ -144,7 +151,8 @@ There are 3 MIDI output ports available.
 
 The command below listens to any inputs coming from the port given (in this example, port #2). <br />
 Keep note of Byte 0 and Byte 1 for all of the buttons you want to map! <br /> Byte 0 is used to tell if a button is pressed down or released and Byte 1 translates to the midi note being played. <br />
-**This will be used in the configuration file later!**
+
+###### :warning: This will be used in the configuration file later!
 
 ```
 midirun -ln 2             # Replace the 2 with what ever port you are using
@@ -154,27 +162,29 @@ midirun --listen 2        # Replace the 2 with what ever port you are using
 
 ## Running the Program <a name="running"></a>
 
-> Note: If there are any errors when trying to simulate keystrokes, try running with sudo. This is because midirun accesses `/dev/uinput` directly.
+###### :warning: If there are any errors when trying to simulate keystrokes, try running with sudo. For a user to run MidiRun without sudo, they will need read and write permissions to `/dev/uinput`. [Possible Solution](https://stackoverflow.com/questions/11939255/writing-to-dev-uinput-on-ubuntu-12-04)
 
 ### Running With The Default Configuration Path <a name="running-default"></a>
 
-The default configuration path is listed below.
-**The configuration file is NOT created automatically!!<br />
-See the [configuration](#configuration) section to create a configuration file**
+**The default configuration path is listed below. See the [configuration](#configuration) section to create a configuration file.**
+
+###### :warning: The configuration file is NOT created automatically!!<br />
 
 ```
 ~/.config/midirun/config.toml
 ```
 
-##### The command below runs the program with the default configuration path
+##### To run MidiRun with the default config path, simply run the command without arguments:
 
 ```
-midirun run # May need to be run with sudo!
+midirun
 ```
 
 ### Running With a Custom Configuration Path <a name="running-custom"></a>
 
-##### The command below run the program with a custom configuration path
+##### To choose a different config path, use the `-c` or `--config` argument followed by the directly
+
+###### :star: You can run more than one instance with different config files to use more than one device)
 
 ```
 midirun -c /path/to/config.toml
@@ -184,7 +194,7 @@ midirun --config /path/to/config.toml
 
 ## Configuration <a name="configuration"></a>
 
-> This project uses [toml](https://toml.io/) for its configuration file.
+###### :star: This project uses [toml](https://toml.io/) for its configuration file.
 
 #### Default Configuration File Path <a name="configuration-default-path"></a>
 
@@ -224,20 +234,10 @@ type = "key"
 key = [2, 3, 4]        # Key codes that will be simulated when the event is called
 ```
 
-#### Fields <a name="configuration-mapping-fields"></a>
-
-| Field (\* required)                          | Type                        | Description                                                                                                                                                                                                                                                                                                                                  |
-| -------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name\*                                       | integer                     | Name of the mapping. This is not important but is recomended as it shows up in the console.                                                                                                                                                                                                                                                  |
-| byte0\*                                      | integer                     | Value of byte0 at the desired state of the button where the event will trigger. In the case of a midi button, this value translates to the state of the button, down or up.                                                                                                                                                                  |
-| byte1\*                                      | integer                     | Value of byte1 at the desired state of the button where the event will trigger. In the case of a midi button, this value translates to the midi note being played.                                                                                                                                                                           |
-| type\*                                       | string ("command" or "key") | Type of event that will be triggered. This is either a command or a simulated key press. The only two values that can go in this field are "command" or "key".                                                                                                                                                                               |
-| command (\* only when the type is "command") | string                      | If the event type is set to "command", this field is required. This can be used to launch programs or run any other command. When executed, the `&` symbol is added to the end.                                                                                                                                                              |
-| key (\* only when the type is "key")         | Array of integers           | If the event type is set to "key", this field is required. All key codes in the array will be simulated when the event is triggered. To find out what keys translate to what key codes, [see this article (the section on identifying keycodes in console)](https://wiki.archlinux.org/title/Keyboard_input#Identifying_keycodes_in_console) |
-
 #### Key Codes <a name="configuration-mapping-key-codes"></a>
 
-**This program uses linux input event codes!**<br />
+###### :warning: This program uses linux input event codes!
+
 To find out what key codes translate to what keys, [see this article (the section on identifying keycodes in console).](https://wiki.archlinux.org/title/Keyboard_input#Identifying_keycodes_in_console) <br/>
 You can also run the command below:
 

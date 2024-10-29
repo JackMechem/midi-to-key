@@ -5,7 +5,6 @@
 #include <signal.h>
 #include <string>
 #include <thread>
-#include <unordered_map>
 
 #include "RtMidi.h"
 #include <toml++/toml.hpp>

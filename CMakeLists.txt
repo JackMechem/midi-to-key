@@ -31,7 +31,7 @@ add_library(rtmidi::rtmidi INTERFACE IMPORTED)
 target_link_libraries(rtmidi::rtmidi INTERFACE rtmidi)
 target_include_directories(rtmidi::rtmidi INTERFACE ${rtmidi_src_SOURCE_DIR})
 
-add_executable(midirun src/main.cpp src/main.h)
+add_executable(midirun src/main.cpp)
 
 target_include_directories(midirun PUBLIC src)
 

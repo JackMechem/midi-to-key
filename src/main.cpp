@@ -1,4 +1,28 @@
-#include "main.h"
+#define APP_VERSION "1.2.0"
+
+#include <iostream>
+#include <pwd.h>
+#include <signal.h>
+#include <string>
+#include <thread>
+#include <unordered_map>
+
+#include "RtMidi.h"
+#include <toml++/toml.hpp>
+
+#ifdef __unix__
+
+#include <fcntl.h>
+#include <linux/input.h>
+#include <linux/uinput.h>
+
+#endif
+
+#ifdef __APPLE__
+
+#include <ApplicationServices/ApplicationServices.h>
+
+#endif
 
 bool done;
 bool verbose = false;
@@ -19,7 +43,7 @@ int listMidiIO() {
 
 	// Check inputs.
 	unsigned int nPorts = midiin->getPortCount();
-	std::cout << "\nThere are " << nPorts << " MIDI input sources available.\n";
+	std::cout << "There are " << nPorts << " MIDI input sources available.\n";
 	std::string portName;
 	for (unsigned int i = 0; i < nPorts; i++) {
 		try {
@@ -40,24 +64,22 @@ int listMidiIO() {
 	}
 
 	// Check outputs.
-	nPorts = midiout->getPortCount();
-	std::cout << "\nThere are " << nPorts << " MIDI output ports available.\n";
-	for (unsigned int i = 0; i < nPorts; i++) {
-		try {
-			portName = midiout->getPortName(i);
-		} catch (RtMidiError &error) {
-			error.printMessage();
-			goto cleanup;
-		}
-		std::cout << "  Output Port #" << i + 1 << ": " << portName << '\n';
-	}
-	std::cout << '\n';
+	// Outputs are not used.
+	// nPorts = midiout->getPortCount();
+	// std::cout << "\nThere are " << nPorts << " MIDI output ports
+	// available.\n"; for (unsigned int i = 0; i < nPorts; i++) { 	try {
+	// portName = midiout->getPortName(i); 	} catch (RtMidiError &error) {
+	// 		error.printMessage();
+	// 		goto cleanup;
+	// 	}
+	// 	std::cout << "  Output Port #" << i + 1 << ": " << portName << '\n';
+	// }
+	// std::cout << '\n';
 
 	// Clean up
 cleanup:
 	delete midiin;
 	delete midiout;
-
 	return 0;
 }
 
@@ -67,7 +89,7 @@ int listenToMidiPort(int port) {
 	int nBytes, i;
 	double stamp;
 
-	// Check if there any ports just in case
+	// Check ports
 	unsigned int nPorts = midiin->getPortCount();
 	if (nPorts == 0) {
 		std::cout << "No ports available!\n";
@@ -351,12 +373,10 @@ void keyPress(std::vector<int> keys) {
 }
 int listenAndMap(std::string configLocation) {
 
-	// {{{ Create Variables For Reading Midi Input
 	RtMidiIn *midiin = new RtMidiIn();
 	std::vector<unsigned char> message;
 	int nBytes, i;
 	double stamp;
-	// }}}
 
 	struct conf_config {
 		std::optional<int> inputPort;
@@ -541,30 +561,38 @@ int main(int argc, char *argv[]) {
 	const std::string homedir = pw->pw_dir;
 	// }}}
 
-	std::unordered_map<std::string, std::string> argMap;
-	argMap["run"] = "true";
-	argMap["config"] = homedir + "/.config/midirun/config.toml";
+	struct {
+		bool run = true;
+		bool verbose = false;
+		bool help = false;
+		bool listIO = false;
+		bool listen = false;
+		int listenPort;
+		std::string config;
+	} args;
+
+	args.config = homedir + "/.config/midirun/config.toml";
 
 	// {{{ Loop Through Command Args
 	for (int i = 0; i < argc; i++) {
 		std::string arg = argv[i];
 		if (arg == "--verbose" || arg == "-v") {
-			argMap["verbose"] = "true";
+			args.verbose = true;
 		} else if (arg == "--help" || arg == "-h") {
-			argMap["help"] = "true";
-			argMap["run"] = "false";
+			args.help = true;
+			args.run = false;
 		} else if (arg == "--config" || arg == "-c") {
-			argMap["config"] = argv[i + 1];
+			args.config = argv[i + 1];
 		} else if (arg == "--list-io" || arg == "-lio") {
-			argMap["listIO"] = "true";
-			argMap["run"] = "false";
+			args.listIO = true;
+			args.run = false;
 		} else if (arg == "--listen" || arg == "-ln") {
-			argMap["listen"] = "true";
-			argMap["listenPort"] = argv[i + 1];
-			argMap["run"] = "false";
+			args.listen = true;
+			args.listenPort = atoi(argv[i + 1]);
+			args.run = false;
 		}
 	}
-	if (argMap.count("verbose")) {
+	if (args.verbose) {
 		verbose = true;
 	}
 
@@ -573,29 +601,29 @@ int main(int argc, char *argv[]) {
 				  << "--------------------\n";
 	}
 
-	if (argMap.count("help") && argMap.count("listen")) {
+	if (args.help && args.listen) {
 		std::cerr << "Invalid Argument(s)!\n"
 				  << "See midirun --help for more info.";
 		return 0;
-	} else if (argMap.count("help") && argMap.count("listIO")) {
+	} else if (args.help && args.listIO) {
 		std::cerr << "Invalid Argument(s)!\n"
 				  << "See midirun --help for more info.\n";
 		return 0;
-	} else if (argMap.count("help")) {
+	} else if (args.help) {
 		helpMessage();
 		return 0;
 	}
-	if (argMap.count("listIO")) {
+	if (args.listIO) {
 		listMidiIO();
 		return 0;
 	}
-	if (argMap.count("listen") && argMap.count("listenPort")) {
-		listenToMidiPort(std::stoi(argMap["listenPort"]));
+	if (args.listen && args.listenPort) {
+		listenToMidiPort(args.listenPort);
 	}
 
-	if (argMap["run"] == "true") {
-		std::cout << "Config Path: " << argMap["config"] << std::endl;
-		listenAndMap(argMap["config"]);
+	if (args.run) {
+		std::cout << "Config Path: " << args.config << std::endl;
+		listenAndMap(args.config);
 	}
 
 	// }}}

@@ -15,7 +15,8 @@
 - [Compiling and Installing](#comp-and-installing)
   - [Install Dependencies](#cai-1)
     - [Arch Linux](#cai-1-1)
-    - [MacOS (brew)](#cai-1-2)
+    - [Fedora Linux](#cai-1-2)
+    - [MacOS (brew)](#cai-1-3)
   - [Clone and Compile](#cai-2)
     - [Clone](#cai-2-1)
     - [Build Directory](#cai-2-2)
@@ -51,7 +52,7 @@
 
 ##### :apple: MacOS <a name="support-macOS"></a>
 
-- Full Support for MacOS
+- Support for MacOS (Abandoned; may or may not work)
   - Key Codes can be found [**here**](https://eastmanreference.com/complete-list-of-applescript-key-codes) or in the [**key codes**](#configuration-mapping-key-codes) section.
 
 ## Dependencies <a name="dependencies"></a>
@@ -68,15 +69,17 @@
 
 ##### 1.1 Arch Linux <a name="cai-1-1"></a>
 
-###### :star: rtmidi and tomlplusplus are optional as they should be installed automatically along with MidiRun.
-
 ```
 sudo pacman -S rtmidi tomlplusplus gcc cmake
 ```
 
-##### 1.2 MacOS (brew) <a name="cai-1-2"></a>
+##### 1.2 Fedora Linux <a name="cai-1-2"></a>
 
-###### :star: rtmidi and tomlplusplus are optional as they should be installed automatically along with MidiRun.
+```
+sudo dnf install rtmidi rtmidi-devel
+```
+
+##### 1.3 MacOS (brew) <a name="cai-1-3"></a>
 
 ```
 brew install rtmidi tomlplusplus gcc cmake
